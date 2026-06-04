@@ -22,7 +22,7 @@ import { parseAtlasMarkdown } from './export/atlas-markdown-importer';
 import { type ExportAtlasTreeBaseDocument, type ExportAtlasTreeDocument } from './export/types';
 import type { ExportAtlasTreeScopeTrees } from './export/types';
 import { childCollectionNames } from './export/types';
-import { fetchAtlasMarkdownContent } from './load-atlas-markdown-from-github';
+import { fetchAtlasMarkdownContent } from './load-atlas-tree-from-github';
 import type { UuidMappings } from './load-uuid-mapping';
 
 // Same regex used by the parser to identify document title lines
@@ -124,6 +124,21 @@ function validateCompleteness(markdown: string, trees: ExportAtlasTreeScopeTrees
       ...mismatches,
     ].join('\n');
     throw new Error(error);
+  }
+
+  // Sanity floor: vacuous (0 == 0) should NOT pass. If upstream returns
+  // empty markdown, the parsed tree is empty too, and a count comparison
+  // alone matches by coincidence. Without this guard, a blank tree can be
+  // cached and served. Threshold 1 catches the empty case without breaking
+  // small-fixture tests; for production, the upstream composeFromTarball
+  // byte check also fires at ~3.4 MB scale.
+  const SANITY_FLOOR = 1;
+  if (rawTotal < SANITY_FLOOR) {
+    throw new Error(
+      `Atlas build validation FAILED: only ${rawTotal} documents found in markdown ` +
+        `(expected ≥ ${SANITY_FLOOR}). Upstream content fetch/extract likely returned ` +
+        `partial or empty data.`,
+    );
   }
 
   console.log(`[Atlas] Build validation passed: ${treeTotal} documents, ${allTypes.length} types, all counts match.`);

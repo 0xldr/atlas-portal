@@ -12,6 +12,9 @@
 
 # testing
 /coverage
+/test-results
+/playwright-report
+/playwright/.cache
 
 # next.js
 /.next/
@@ -42,6 +45,12 @@ yarn-error.log*
 next-env.d.ts
 .env*.local
 
+# python (renderer)
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
 .trigger
 
 # Notion API local cache
@@ -60,3 +69,4 @@ next-env.d.ts
 .debug-data/
 
 logs
+.claude/worktrees/
